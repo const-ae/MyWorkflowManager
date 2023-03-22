@@ -5,7 +5,7 @@ NULL
 
 .OUTPUT_FOLDER <- function(){
   out <- Sys.getenv("MYWORKFLOWMANAGER_OUTPUT_FOLDER")
-  if(is.null(out)){
+  if(is.null(out) || out == ""){
     stop("Please call 'init()' and set the output folder")
   }
   out
