@@ -319,7 +319,7 @@ run_job <- function(job, priority = c("low", "normal", "high")){
   }else{
     message("Job is already running: ", job_status(job))
   }
-  job
+  invisible(job)
 }
 
 #' Apply function to all dependencies of a job and return a list
