@@ -351,7 +351,7 @@ cancel_all_depending_jobs <- function(job){
   message("Cancelling jobs")
   message(submission)
   system(submission, wait = TRUE)
-  job
+  invisible(job)
 }
 
 #' Cancel one individual job
@@ -370,7 +370,7 @@ cancel_job <- function(job){
     message(submission)
     system(submission, wait = TRUE)
   }
-  job
+  invisible(job)
 }
 
 
