@@ -16,7 +16,7 @@ exit_if_error() {
 
 echo "Start Script"
 
-module load R-bundle-Bioconductor/3.15-foss-2021b-R-4.2.0
+module load R-bundle-Bioconductor/3.16-foss-2022b-R-4.2.2
 STAT_FILE=$1
 shift
 /usr/bin/time --output=$STAT_FILE --format="elapsed %e\nuser %U\nsys %S\nmax_mem_kbytes %M\n" Rscript --no-restore $@
