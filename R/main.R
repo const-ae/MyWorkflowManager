@@ -290,7 +290,6 @@ wrap_script <- function(script, params = list(), dependencies = list(),
 #' @export
 run_job <- function(job, priority = c("low", "normal", "high")){
   priority <- match.arg(priority)
-  executor <- match.arg(executor)
   if(job_status(job) %in% c("not_started", "failed")){
     parameter_string <- convert_to_string(get_params(job))
 
