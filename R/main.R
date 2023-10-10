@@ -248,6 +248,7 @@ is.job <- function(x) inherits(x, "job")
 #'
 #' @export
 wrap_script <- function(script, params = list(), dependencies = list(),
+                        executor = c("R", "python"), extra_args = "",
                         duration = "01:00", memory = "1GB", n_cpus = 1){
   stopifnot(is.character(script))
   stopifnot(length(script) == 1L)
@@ -255,9 +256,16 @@ wrap_script <- function(script, params = list(), dependencies = list(),
   stopifnot(is.list(params))
   stopifnot(! is.null(names(params)))
   stopifnot(all(vapply(params, function(elem) is.character(elem) || is.numeric(elem), logical(1L))))
+  executor <- match.arg(executor)
   stopifnot(n_cpus %% 1 == 0)
   stopifnot(n_cpus > 0 && n_cpus <= 100)
   n_cpus <- as.character(n_cpus)
+
+  script_extension <- tools::file_ext(script)
+  if((script_extension == "R" && executor != "R") ||
+     (script_extension == "py" && executor != "python")){
+    stop("The file extension of the script and the executor don't match.")
+  }
 
   script_id <- store_script(script)
   params_id <- store_params(params)
@@ -265,7 +273,8 @@ wrap_script <- function(script, params = list(), dependencies = list(),
   result_id <- paste0(script_id, "-", params_id)
 
   res <- list(script_path = script, script_id = script_id, params_id = params_id, result_id = result_id,
-              resources = list(duration = duration, memory = memory, n_cpus = n_cpus),
+              resources = list(duration = duration, memory = memory, n_cpus = n_cpus), executor = executor,
+              extra_args = extra_args,
               dependencies = dependencies)
   class(res) <- "job"
   res
@@ -276,8 +285,7 @@ wrap_script <- function(script, params = list(), dependencies = list(),
 #'
 #'
 #' @export
-run_job <- function(job, priority = c("low", "normal", "high"), executor = c("R", "python"),
-                    extra_args = ""){
+run_job <- function(job, priority = c("low", "normal", "high")){
   priority <- match.arg(priority)
   executor <- match.arg(executor)
   if(job_status(job) %in% c("not_started", "failed")){
@@ -308,9 +316,9 @@ run_job <- function(job, priority = c("low", "normal", "high"), executor = c("R"
           --parsable \
           -e {paste0(.OUTPUT_FOLDER(), "/logs/id_", job$result_id)}-slurmid_%j.log \
           -o {paste0(.OUTPUT_FOLDER(), "/logs/id_", job$result_id)}-slurmid_%j.log \
-          {system.file(if(executor == "R") "submit_r_script.sh" else "submit_py_script.sh", package = "MyWorkflowManager")} \
-            {paste0(.OUTPUT_FOLDER(), "/stats/", job$result_id)} \
-              "{paste0(.OUTPUT_FOLDER(), "/scripts/", job$script_id)} {extra_args} {parameter_string} \
+          {system.file(if(job$executor == "R") "submit_r_script.sh" else "submit_py_script.sh", package = "MyWorkflowManager")} \
+            {paste0(.OUTPUT_FOLDER(), "/stats/", job$result_id)} {job$extra_args} \
+              "{paste0(.OUTPUT_FOLDER(), "/scripts/", job$script_id)} {parameter_string} \
                 --working_dir {.OUTPUT_FOLDER()} --result_id {job$result_id}") && \
           echo $RES > {file.path(.OUTPUT_FOLDER(), "slurm_job_overview", job$result_id)}
       )") %>% glue::trim()
