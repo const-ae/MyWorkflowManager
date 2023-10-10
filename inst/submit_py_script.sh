@@ -22,6 +22,7 @@ shift
 module purge
 module load Anaconda3/2023.03-1
 module load CUDA/11.7.0
+module list
 source /g/easybuild/x86_64/Rocky/8/haswell/software/Anaconda3/2023.03-1/bin/activate $1
 shift
 
