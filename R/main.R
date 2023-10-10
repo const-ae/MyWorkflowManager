@@ -311,6 +311,7 @@ run_job <- function(job, priority = c("low", "normal", "high")){
     submission <- glue::glue(
         r"(RES=$(sbatch --time {job$resources$duration} \
           --mem={job$resources$memory} \
+          --export=None \
           -n {job$resources$n_cpus} \
           -N 1 \
           --qos={priority} \
