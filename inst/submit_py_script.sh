@@ -16,12 +16,16 @@ exit_if_error() {
 
 echo "Start Script"
 
-module purge
-module load R-bundle-Bioconductor/3.16-foss-2022b-R-4.2.2
 STAT_FILE=$1
 shift
-/usr/bin/time --output=$STAT_FILE --format="elapsed %e\nuser %U\nsys %S\nmax_mem_kbytes %M\n" Rscript --no-restore $@
-exit_if_error $? "Rscript"
 
+module purge
+module load Anaconda3/2023.03-1
+module load CUDA/11.7.0
+source /g/easybuild/x86_64/Rocky/8/haswell/software/Anaconda3/2023.03-1/bin/activate $1
+shift
+
+/usr/bin/time --output=$STAT_FILE --format="elapsed %e\nuser %U\nsys %S\nmax_mem_kbytes %M\n" python $@
+exit_if_error $? "python"
 
 echo "Finished Script"

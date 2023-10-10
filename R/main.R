@@ -276,8 +276,10 @@ wrap_script <- function(script, params = list(), dependencies = list(),
 #'
 #'
 #' @export
-run_job <- function(job, priority = c("low", "normal", "high")){
+run_job <- function(job, priority = c("low", "normal", "high"), executor = c("R", "python"),
+                    extra_args = ""){
   priority <- match.arg(priority)
+  executor <- match.arg(executor)
   if(job_status(job) %in% c("not_started", "failed")){
     parameter_string <- convert_to_string(get_params(job))
 
@@ -297,18 +299,19 @@ run_job <- function(job, priority = c("low", "normal", "high")){
     }
 
     submission <- glue::glue(
-      r"(RES=$(sbatch --time {job$resources$duration} \
-      --mem={job$resources$memory} \
-      -n {job$resources$n_cpus} \
-      -N 1 \
-      --qos={priority} \
-      {slurm_dependencies} \
-      --parsable \
-      -e {paste0(.OUTPUT_FOLDER(), "/logs/id_", job$result_id)}-slurmid_%j.log \
-      -o {paste0(.OUTPUT_FOLDER(), "/logs/id_", job$result_id)}-slurmid_%j.log \
-      {system.file("submit_r_script.sh", package = "MyWorkflowManager")} \
-        {paste0(.OUTPUT_FOLDER(), "/stats/", job$result_id)} "{paste0(.OUTPUT_FOLDER(), "/scripts/", job$script_id)} {parameter_string} \
-        --working_dir {.OUTPUT_FOLDER()} --result_id {job$result_id}") && \
+        r"(RES=$(sbatch --time {job$resources$duration} \
+          --mem={job$resources$memory} \
+          -n {job$resources$n_cpus} \
+          -N 1 \
+          --qos={priority} \
+          {slurm_dependencies} \
+          --parsable \
+          -e {paste0(.OUTPUT_FOLDER(), "/logs/id_", job$result_id)}-slurmid_%j.log \
+          -o {paste0(.OUTPUT_FOLDER(), "/logs/id_", job$result_id)}-slurmid_%j.log \
+          {system.file(if(executor == "R") "submit_r_script.sh" else "submit_py_script.sh", package = "MyWorkflowManager")} \
+            {paste0(.OUTPUT_FOLDER(), "/stats/", job$result_id)} \
+              "{paste0(.OUTPUT_FOLDER(), "/scripts/", job$script_id)} {extra_args} {parameter_string} \
+                --working_dir {.OUTPUT_FOLDER()} --result_id {job$result_id}") && \
           echo $RES > {file.path(.OUTPUT_FOLDER(), "slurm_job_overview", job$result_id)}
       )") %>% glue::trim()
 
