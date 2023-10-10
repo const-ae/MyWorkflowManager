@@ -245,6 +245,9 @@ is.job <- function(x) inherits(x, "job")
 #' @param params a list of simple parameters that can be converted to command
 #'   line options
 #' @param dependencies a list of jobs whose results this job depends on
+#' @param executor is it an R or a python script
+#' @param extra_args a hack to specify the name of the conda environment that python loads
+#' @param duration,memory,n_cpus the job resources
 #'
 #' @export
 wrap_script <- function(script, params = list(), dependencies = list(),
