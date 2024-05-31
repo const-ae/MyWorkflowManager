@@ -252,7 +252,7 @@ is.job <- function(x) inherits(x, "job")
 #' @export
 wrap_script <- function(script, params = list(), dependencies = list(),
                         executor = c("R", "python"), extra_args = "",
-                        duration = "01:00", memory = "1GB", n_cpus = 1){
+                        extra_slurm_args = "", duration = "01:00", memory = "1GB", n_cpus = 1){
   stopifnot(is.character(script))
   stopifnot(length(script) == 1L)
   stopifnot(all(vapply(dependencies, is.job, logical(1L))))
@@ -277,7 +277,7 @@ wrap_script <- function(script, params = list(), dependencies = list(),
 
   res <- list(script_path = script, script_id = script_id, params_id = params_id, result_id = result_id,
               resources = list(duration = duration, memory = memory, n_cpus = n_cpus), executor = executor,
-              extra_args = extra_args,
+              extra_args = extra_args, extra_slurm_args = extra_slurm_args,
               dependencies = dependencies)
   class(res) <- "job"
   res
@@ -314,6 +314,7 @@ run_job <- function(job, priority = c("low", "normal", "high")){
           --export=None \
           -n {job$resources$n_cpus} \
           -N 1 \
+          {job$extra_slurm_args} \
           --qos={priority} \
           {slurm_dependencies} \
           --parsable \
