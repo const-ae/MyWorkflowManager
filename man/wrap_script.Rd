@@ -10,6 +10,7 @@ wrap_script(
   dependencies = list(),
   executor = c("R", "python"),
   extra_args = "",
+  extra_slurm_args = "",
   duration = "01:00",
   memory = "1GB",
   n_cpus = 1

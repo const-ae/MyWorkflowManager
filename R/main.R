@@ -83,6 +83,11 @@ store_params <- function(params){
   params_id
 }
 
+#' Get the parameters for a job
+#'
+#' @param job a job object
+#'
+#' @export
 get_params <- function(job){
   stopifnot(is.job(job))
   yaml::read_yaml(file.path(.OUTPUT_FOLDER(), "params", job$params_id))

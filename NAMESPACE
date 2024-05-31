@@ -3,6 +3,7 @@
 export(cancel_all_depending_jobs)
 export(cancel_job)
 export(get_output_log)
+export(get_params)
 export(init)
 export(is.job)
 export(job_status)
