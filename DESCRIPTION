@@ -1,7 +1,7 @@
 Package: MyWorkflowManager
 Type: Package
 Title: Convenient workflow manager that caches intermediate results and works with Slurm
-Version: 0.2.0
+Version: 0.2.1
 Authors@R: person("Constantin", "Ahlmann-Eltze", email = "artjom31415@googlemail.com", 
                     role = c("aut", "cre"), comment = c(ORCID = "0000-0002-3762-068X"))
 Description: More about what it does (maybe more than one line)
