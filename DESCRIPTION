@@ -9,10 +9,16 @@ Description: More about what it does (maybe more than one line)
 License: MIT + file LICENSE
 Encoding: UTF-8
 Imports:
-  stringr,
-  readr,
-  glue,
-  magrittr,
-  yaml,
-  digest
+    stringr,
+    readr,
+    glue,
+    magrittr,
+    tibble,
+    dplyr,
+    blob,
+    lubridate,
+    qs,
+    yaml,
+    digest,
+    RSQLite
 RoxygenNote: 7.3.1
