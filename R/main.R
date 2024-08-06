@@ -11,6 +11,9 @@ NULL
   out
 }
 
+.db_con <- NULL
+
+
 #' Create required subfolders
 #'
 #' @export
@@ -27,6 +30,11 @@ init <- function(output_folder){
   if(! file.exists(file.path(output_folder, "logs")))  dir.create(file.path(output_folder, "logs"))
   if(! file.exists(file.path(output_folder, "stats")))  dir.create(file.path(output_folder, "stats"))
   if(! file.exists(file.path(output_folder, "slurm_job_overview")))  dir.create(file.path(output_folder, "slurm_job_overview"))
+
+  .db_con <<- RSQLite::dbConnect(RSQLite::SQLite(), dbname = file.path(output_folder, "./job_db.sqlite"), extended_types = TRUE)
+  if(! RSQLite::dbExistsTable(.db_con, "job_ids")){
+    RSQLite::dbWriteTable(.db_con, "job_ids", make_db_rows(make_empty = TRUE))
+  }
 
   Sys.setenv("MYWORKFLOWMANAGER_OUTPUT_FOLDER" = output_folder)
 }
@@ -194,6 +202,15 @@ slurm_job_status <- function(job){
     stringr::str_split("\\s") %>% magrittr::extract2(1) %>% magrittr::extract(1)
 }
 
+slurm_status <- function(slurm_ids){
+  # get the 200 characters of the state variable left justified
+  cmd_slurm_status <- glue::glue("sacct --jobs={paste0(slurm_ids, collapse=",")} --format=state%-200 --noheader")
+  # stringr::str_trim(system(cmd_slurm_status, intern = TRUE)[1]) %>%
+  #   stringr::str_split("\\s") %>% magrittr::extract2(1) %>% magrittr::extract(1)
+  system(cmd_slurm_status, intern = TRUE) %>%
+    stringr::str_trim()
+}
+
 #' Slurm job info
 #'
 #' @export
@@ -336,10 +353,56 @@ run_job <- function(job, priority = c("low", "normal", "high")){
     message("Launching new job")
     message(submission)
     system(submission, wait = TRUE)
+    store_jobs(list(job))
   }else{
     message("Job is already running: ", job_status(job))
   }
   invisible(job)
+}
+
+
+make_db_rows <- function(jobs, make_empty = FALSE){
+  if(make_empty){
+    tibble::tibble(
+      result_id = "",
+      slurm_id = "",
+      timestamp = lubridate::now(),
+      jobs_blob = blob::new_blob(),
+      .rows = 0
+    )
+  }else{
+    tibble::tibble(
+      result_id = vapply(jobs, \(j) j$result_id, FUN.VALUE = character(1L)),
+      slurm_id = vapply(jobs, \(j) get_slurm_id(j), FUN.VALUE = character(1L)),
+      timestamp = lubridate::now(),
+      jobs_blob = lapply(jobs, \(j) qs::qserialize(j))
+    )
+  }
+}
+
+store_jobs <- function(jobs){
+  RSQLite::dbAppendTable(.db_con, "job_overview", value = make_db_rows(jobs))
+}
+
+#' Return the jobs stored in the storage table
+#'
+#' @param n the number of jobs to return. Default: `10`
+#' @param raw flag indicating if the `tbl` of the
+#'   database connection is returned or if the data is
+#'   sorted by `timestamp` and `collect()` is called.
+#'   Default: `FALSE`
+#'
+#'
+#' @export
+get_jobs <- function(n = 10, raw = FALSE){
+  if(raw){
+    dplyr::tbl(.db_con, "job_overview")
+  }else{
+    dplyr::tbl(.db_con, "job_overview") %>%
+      dplyr::slice_min(timestamp, with_ties = FALSE, n = n) %>%
+      dplyr::collect(n = n) %>%
+      dplyr::mutate(job = lapply(job, qs::qdeserialize))
+  }
 }
 
 #' Apply function to all dependencies of a job and return a list
