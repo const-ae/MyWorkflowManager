@@ -406,15 +406,19 @@ store_jobs <- function(jobs){
 #'
 #'
 #' @export
-get_jobs <- function(n = 10, raw = FALSE){
+get_jobs <- function(n = 10, add_status = FALSE, raw = FALSE){
   if(raw){
     dplyr::tbl(.DB_CONNECTION(), "job_overview")
   }else{
-    dplyr::tbl(.DB_CONNECTION(), "job_overview") %>%
+    res <- dplyr::tbl(.DB_CONNECTION(), "job_overview") %>%
       dplyr::slice_max(timestamp, with_ties = FALSE, n = n) %>%
       dplyr::collect(n = n) %>%
       dplyr::mutate(jobs_blob = lapply(jobs_blob, qs::qdeserialize)) %>%
       dplyr::rename(jobs = jobs_blob)
+    if(add_status){
+      res$status <- map_chr(res$jobs, job_status)
+    }
+    res
   }
 }
 
