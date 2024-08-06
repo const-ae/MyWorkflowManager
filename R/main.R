@@ -44,8 +44,8 @@ init <- function(output_folder){
   if(! file.exists(file.path(output_folder, "slurm_job_overview")))  dir.create(file.path(output_folder, "slurm_job_overview"))
 
   .global_state$my_db_con <- RSQLite::dbConnect(RSQLite::SQLite(), dbname = file.path(output_folder, "./job_db.sqlite"), extended_types = TRUE)
-  if(! RSQLite::dbExistsTable(.DB_CONNECTION(), "job_ids")){
-    RSQLite::dbWriteTable(.DB_CONNECTION(), "job_ids", make_db_rows(make_empty = TRUE))
+  if(! RSQLite::dbExistsTable(.DB_CONNECTION(), "job_overview")){
+    RSQLite::dbWriteTable(.DB_CONNECTION(), "job_overview", make_db_rows(make_empty = TRUE))
   }
 
   .global_state$output_folder <- output_folder
