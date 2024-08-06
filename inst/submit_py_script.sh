@@ -20,10 +20,10 @@ STAT_FILE=$1
 shift
 
 module purge
-module load Anaconda3/2023.03-1
+module load Miniforge3/24.1.2-0
 module load CUDA/11.7.0
 module list
-source /g/easybuild/x86_64/Rocky/8/haswell/software/Anaconda3/2023.03-1/bin/activate $1
+source /g/easybuild/x86_64/Rocky/8/haswell/software/Miniforge3/24.1.2-0/bin/activate $1
 shift
 
 /usr/bin/time --output=$STAT_FILE --format="elapsed %e\nuser %U\nsys %S\nmax_mem_kbytes %M\n" python $@
