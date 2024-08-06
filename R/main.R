@@ -413,7 +413,8 @@ get_jobs <- function(n = 10, raw = FALSE){
     dplyr::tbl(.DB_CONNECTION(), "job_overview") %>%
       dplyr::slice_min(timestamp, with_ties = FALSE, n = n) %>%
       dplyr::collect(n = n) %>%
-      dplyr::mutate(job = lapply(job, qs::qdeserialize))
+      dplyr::mutate(jobs_blob = lapply(jobs_blob, qs::qdeserialize)) %>%
+      dplyr::rename(jobs = jobs_blob)
   }
 }
 
