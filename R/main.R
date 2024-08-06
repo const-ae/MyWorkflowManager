@@ -3,15 +3,27 @@
 #' @importFrom magrittr `%>%`
 NULL
 
+.global_state <- new.env(parent = emptyenv())
+.global_state$output_folder <- NULL
+.global_state$my_db_con <- NULL
+
+
 .OUTPUT_FOLDER <- function(){
-  out <- Sys.getenv("MYWORKFLOWMANAGER_OUTPUT_FOLDER")
+  out <- .global_state$output_folder
   if(is.null(out) || out == ""){
     stop("Please call 'init()' and set the output folder")
   }
   out
 }
 
-.db_con <- NULL
+.DB_CONNECTION <- function(){
+  con <- .global_state$my_db_con
+  if(is.null(con)){
+    stop("Please call 'init()' to initialize the database connection")
+  }
+  con
+}
+
 
 
 #' Create required subfolders
@@ -31,12 +43,12 @@ init <- function(output_folder){
   if(! file.exists(file.path(output_folder, "stats")))  dir.create(file.path(output_folder, "stats"))
   if(! file.exists(file.path(output_folder, "slurm_job_overview")))  dir.create(file.path(output_folder, "slurm_job_overview"))
 
-  .db_con <<- RSQLite::dbConnect(RSQLite::SQLite(), dbname = file.path(output_folder, "./job_db.sqlite"), extended_types = TRUE)
-  if(! RSQLite::dbExistsTable(.db_con, "job_ids")){
-    RSQLite::dbWriteTable(.db_con, "job_ids", make_db_rows(make_empty = TRUE))
+  .global_state$my_db_con <<- RSQLite::dbConnect(RSQLite::SQLite(), dbname = file.path(output_folder, "./job_db.sqlite"), extended_types = TRUE)
+  if(! RSQLite::dbExistsTable(.DB_CONNECTION(), "job_ids")){
+    RSQLite::dbWriteTable(.DB_CONNECTION(), "job_ids", make_db_rows(make_empty = TRUE))
   }
 
-  Sys.setenv("MYWORKFLOWMANAGER_OUTPUT_FOLDER" = output_folder)
+  .global_state$output_folder <- output_folder
 }
 
 
@@ -381,7 +393,7 @@ make_db_rows <- function(jobs, make_empty = FALSE){
 }
 
 store_jobs <- function(jobs){
-  RSQLite::dbAppendTable(.db_con, "job_overview", value = make_db_rows(jobs))
+  RSQLite::dbAppendTable(.DB_CONNECTION(), "job_overview", value = make_db_rows(jobs))
 }
 
 #' Return the jobs stored in the storage table
@@ -396,9 +408,9 @@ store_jobs <- function(jobs){
 #' @export
 get_jobs <- function(n = 10, raw = FALSE){
   if(raw){
-    dplyr::tbl(.db_con, "job_overview")
+    dplyr::tbl(.DB_CONNECTION(), "job_overview")
   }else{
-    dplyr::tbl(.db_con, "job_overview") %>%
+    dplyr::tbl(.DB_CONNECTION(), "job_overview") %>%
       dplyr::slice_min(timestamp, with_ties = FALSE, n = n) %>%
       dplyr::collect(n = n) %>%
       dplyr::mutate(job = lapply(job, qs::qdeserialize))
