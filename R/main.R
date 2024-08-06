@@ -57,7 +57,7 @@ get_script_id <- function(script){
   # For 'd = #number of unique hashes' and 'n = #scripts' or 'n = #params',
   # the chance of a collision is approx p = 1 - exp(-n^2 / (2 * d))
   # For n = 1e6 and d = 16^13, p = 0.01%
-  readr::read_lines(script) %>%
+  readr::read_lines(script, progress = FALSE) %>%
     paste0(collapse = "\n") %>%
     digest::digest() %>%
     stringr::str_sub(end = 13)
@@ -194,7 +194,7 @@ is_script_outdated <- function(job, script){
 get_slurm_id_from_result_id <- function(result_id){
   file <- file.path(.OUTPUT_FOLDER(), "slurm_job_overview", result_id)
   if(file.exists(file.path(.OUTPUT_FOLDER(), "slurm_job_overview", result_id))){
-    readr::read_lines(file)
+    readr::read_lines(file, progress = FALSE)
   }else{
     stop("slurm id for result ", result_id, " not available")
   }
