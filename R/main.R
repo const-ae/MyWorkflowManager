@@ -249,6 +249,7 @@ job_status <- function(job){
                      "PENDING" = "running",
                      "RUNNING" = "running",
                      "SUSPENDED" = "running",
+                     "COMPLETED" = "running",  # Empirically a job starts in with code "COMPLETED" which is weird, but whatever
                      `NA` = "running",
                      "FAILED" = "failed",
                      "BOOT_FAIL" = "failed",
@@ -258,7 +259,6 @@ job_status <- function(job){
                      "NODE_FAIL" = "failed",
                      "OUT_OF_MEMORY" = "failed",
                      "PREEMPTED" = "failed",
-                     "COMPLETED" = "failed",
                      "other"
       )
       if(res == "other") stop("Unkown slurm job status: ", slurm_status)
